@@ -1,0 +1,528 @@
+openapi: 3.0.0
+info:
+  title: Fake StackOverflow REST API
+  version: 1.0.0
+  description: |
+    API for managing questions, answers, comments, tags, votes, and users in a fake Stack Overflow-style application.
+servers:
+  - url: http://localhost:8000
+    description: Development server for the Fake StackOverflow REST API.
+
+tags:
+  - name: Tags
+    description: Operations related to tags
+  - name: Questions
+    description: Operations related to questions
+  - name: Answers
+    description: Operations related to answers
+  - name: Comments
+    description: Operations related to comments
+  - name: Votes
+    description: Operations related to votes
+  - name: Users
+    description: Operations related to user login, signup, and session management
+
+paths:
+  /tag/getTagsWithQuestionNumber:
+    get:
+      tags: [Tags]
+      summary: Get all tags with their question counts
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TagCount"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /question/addQuestion:
+    post:
+      tags: [Questions]
+      summary: Add a new question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddQuestionRequest"
+      responses:
+        "200":
+          description: Question added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /question/getQuestionById/{qid}:
+    get:
+      tags: [Questions]
+      summary: Get question by ID
+      parameters:
+        - in: path
+          name: qid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Question found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "404": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /question/getQuestion:
+    get:
+      tags: [Questions]
+      summary: Get filtered questions
+      parameters:
+        - in: query
+          name: order
+          required: false
+          schema: { type: string, default: newest }
+        - in: query
+          name: search
+          required: false
+          allowEmptyValue: true
+          allowReserved: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Question" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /question/deleteQuestionById/{qid}:
+    delete:
+      tags: [Questions]
+      summary: Delete a question
+      parameters:
+        - in: path
+          name: qid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Question deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Question"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /answer/addAnswer:
+    post:
+      tags: [Answers]
+      summary: Add a new answer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddAnswerRequest"
+      responses:
+        "200":
+          description: Answer added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Answer"
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /answer/deleteAnswerById/{aid}:
+    delete:
+      tags: [Answers]
+      summary: Delete an answer by ID
+      parameters:
+        - in: path
+          name: aid
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Answer deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Answer" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "404": { $ref: "#/components/responses/BadRequest" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /comment/addComment/{parentType}/{parentID}:
+    post:
+      tags: [Comments]
+      summary: Add a comment to a parent entity
+      parameters:
+        - in: path
+          name: parentType
+          required: true
+          schema: { type: string, enum: [question, answer] }
+        - in: path
+          name: parentID
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AddCommentRequest" }
+      responses:
+        "200":
+          description: Comment added
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /comment/deleteCommentById/{parentType}/{parentID}/comment/{commentID}:
+    delete:
+      tags: [Comments]
+      summary: Delete a comment
+      parameters:
+        - name: parentType
+          in: path
+          required: true
+          schema: { type: string }
+        - name: parentID
+          in: path
+          required: true
+          schema: { type: string }
+        - name: commentID
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Comment deleted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /vote/{parentType}/{parentId}:
+    patch:
+      tags: [Votes]
+      summary: Cast or update a vote on a content item
+      parameters:
+        - name: parentType
+          in: path
+          required: true
+          schema: { type: string, enum: [question, answer, comment] }
+        - name: parentId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: vote
+          in: query
+          required: false
+          schema: { type: string, enum: [up_vote, down_vote], default: up_vote }
+      responses:
+        "200":
+          description: Vote recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  vote_count: { type: integer }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "409":
+          description: Conflict - already voted
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /user/register:
+    post:
+      tags: [Users]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "201":
+          description: Registered
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403": { $ref: "#/components/responses/UnauthorizedAccess" }
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /user/login:
+    post:
+      tags: [Users]
+      summary: Log in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Logged in
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "403":
+          description: Incorrect password
+        "404":
+          description: User not found
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /user/getUser:
+    get:
+      tags: [Users]
+      summary: Get current logged-in user
+      responses:
+        "200":
+          description: Success
+        "404":
+          description: User not found
+        "500": { $ref: "#/components/responses/InternalServerError" }
+
+  /user/logout:
+    post:
+      tags: [Users]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+        "500": { $ref: "#/components/responses/InternalServerError" }
+  /csrf-token:
+    get:
+      tags:
+        - Users
+      summary: Get a CSRF token from the session
+      description: |
+        Returns a CSRF token stored in the current session. The client must send this token
+        in the `x-csrf-token` header for all state-changing requests (POST, PATCH, DELETE, PUT).
+      responses:
+        "200":
+          description: CSRF token generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken:
+                    type: string
+                    example: "a9f3e1b76c4c8c0e5f1234567890abcd12345678"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  message: { type: string }
+    UnauthorizedAccess:
+      description: Unauthorized Access
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  message: { type: string }
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+
+  schemas:
+    Tag:
+      type: object
+      properties:
+        _id: { type: string }
+        name: { type: string }
+
+    TagCount:
+      type: object
+      properties:
+        name: { type: string }
+        qcnt: { type: integer }
+
+    Question:
+      type: object
+      properties:
+        _id:
+          type: string
+        title:
+          type: string
+        text:
+          type: string
+        asked_by:
+          type: string
+        ask_date_time:
+          type: string
+          format: date-time
+        views:
+          type: integer
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        answers:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - $ref: "#/components/schemas/Answer"
+        comments:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - $ref: "#/components/schemas/Comment"
+        vote_count:
+          type: integer
+        __v:
+          type: integer
+
+
+    AddQuestionRequest:
+      type: object
+      required: [title, text, tags]
+      properties:
+        title: { type: string }
+        text: { type: string }
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+        asked_by:
+          type: string
+        ask_date_time: { type: string, format: date-time }
+
+    Answer:
+      type: object
+      properties:
+        _id:
+          type: string
+        text:
+          type: string
+        ans_by:
+          type: string
+        ans_date_time:
+          type: string
+          format: date-time
+        comments:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - $ref: "#/components/schemas/Comment"
+        vote_count:
+          type: integer
+        __v:
+          type: integer
+
+
+    AddAnswerRequest:
+      type: object
+      required:
+        - qid
+        - ans
+      properties:
+        qid:
+          type: string
+        ans:
+          type: object
+          required:
+            - text
+          properties:
+            text:
+              type: string
+            ans_by:
+              type: string
+            ans_date_time:
+              type: string
+              format: date-time
+
+
+    Comment:
+      type: object
+      properties:
+        _id: { type: string }
+        text: { type: string }
+        comment_by: { type: string }
+        comment_date_time: { type: string, format: date-time }
+        vote_count: { type: integer }
+
+    AddCommentRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+        comment_by:
+          type: string
+        comment_date_time:
+          type: string
+          format: date-time
+
+    Vote:
+      type: object
+      properties:
+        _id: { type: string }
+        vote_type: { type: string, enum: [up_vote, down_vote] }
+        voted_by: { type: string }
+        parent_id: { type: string }
+        parent_type: { type: string, enum: [question, answer, comment] }

@@ -1,0 +1,36 @@
+name: FSO run e2e testing
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  "run-cypress-tests":
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Server Dependencies
+        run: |
+          cd server
+          npm install
+
+      - name: Install Client Dependencies
+        run: |
+          cd client
+          npm install
+
+      - name: Start Server and Client in Background
+        run: |
+          cd server
+          npm start &
+
+          cd ../client
+          npm start &
+
+      - name: Run Cypress Tests
+        run: |
+          cd client
+          npx cypress run

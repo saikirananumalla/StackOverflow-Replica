@@ -1,0 +1,42 @@
+name: FSO run unit tests and check eslint for code smells
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  "run-tests-and-eslint":
+    runs-on: self-hosted
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          cd server
+          npm install
+
+      - name: Install Dependencies Client
+        run: |
+          cd client
+          npm install
+
+      - name: Run Tests
+        run: |
+          cd server
+          npm run test
+
+      - name: Run Eslint on server
+        run: |
+          cd server
+          npx eslint --max-warnings=0
+
+      - name: Run Eslint on client
+        run: |
+          cd client
+          npx eslint src/ --max-warnings=0

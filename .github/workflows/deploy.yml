@@ -1,0 +1,31 @@
+name: FSO populate re-populate db
+
+on:
+  push:
+    branches:
+      - deploy
+jobs:
+  "run-populate-db-scripts":
+    runs-on: self-hosted
+    env:
+      MONGO_URL: ${{ secrets.MONGO_URL }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install Dependencies
+        run: |
+          cd server
+          npm install
+
+      - name: Run remove db script
+        run: |
+          cd server
+          npx ts-node scripts/remove_db.ts $MONGO_URL
+
+      - name: Run populate db script
+        run: |
+          cd server
+          npx ts-node scripts/populate_db.ts $MONGO_URL
+
