@@ -1,6 +1,6 @@
 # 🌐 StackOverflow Clone — CS5500 Final Project
 
-A full-stack Q&A platform inspired by Stack Overflow. Users can sign up, post questions, comment, vote on answers, and manage their activity. Built with a modern tech stack and deployed using CI/CD workflows and Docker containers.
+A full-stack Q&A platform inspired by Stack Overflow. Users can sign up, post questions, comment, vote on answers, and manage their activity. Built with a modern tech stack and deployed using CI/CD workflows.
 
 ## ✨ Features
 
@@ -24,6 +24,5 @@ A full-stack Q&A platform inspired by Stack Overflow. Users can sign up, post qu
 - MongoDB
 
 **DevOps**:
-- Docker
 - GitHub Actions for CI/CD
 - GitHub Projects for task tracking
